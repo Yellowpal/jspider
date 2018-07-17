@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+ 		
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
+       
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/aop
+          http://www.springframework.org/schema/aop/spring-aop.xsd
+          http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context.xsd
+          http://dubbo.apache.org/schema/dubbo
+          http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
+
+
+	<context:property-placeholder location="classpath:*.properties" ignore-unresolvable="true"/>
+	<!-- 自动扫描注解 -->
+    <context:annotation-config />
+	<context:component-scan base-package="win.yellowpal.jspider.service" />
+	
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxTotal" value="${redis.pool.maxTotal}"></property>
+		<property name="maxIdle" value="${redis.pool.maxIdle}"></property>
+		<property name="minIdle" value="${redis.pool.minIdle}"></property>
+	</bean>
+	
+	<bean id="jedisPool" class="redis.clients.jedis.JedisPool" >
+		<constructor-arg name="poolConfig" ref="jedisPoolConfig" />
+		<constructor-arg name="host" value="${redis.host}" />
+		<constructor-arg name="port" value="${redis.port}" type="int" />
+        <constructor-arg name="timeout" value="${redis.timeout}" type="int" />
+        <constructor-arg name="password" value="${redis.password}" />
+        <constructor-arg name="database" value="${redis.database}" type="int" />
+	</bean>
+	
+</beans>
