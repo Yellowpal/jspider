@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -21,6 +22,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -179,7 +181,7 @@ public class HttpServiceImpl implements HttpService{
 	}
 
 	@Override
-	public String doGet(String url, String charset) throws IOException {
+	public String doGet(String url, String charset, Header[] headers) throws IOException {
 		charset = getCharset(charset);
         String requestUrl = url;
         HttpGet getMethod = new HttpGet(url);
@@ -187,6 +189,11 @@ public class HttpServiceImpl implements HttpService{
                 .setConnectTimeout(timeout).setConnectionRequestTimeout(timeout)
                 .setSocketTimeout(timeout).setRedirectsEnabled(false).build();
         getMethod.setConfig(requestConfig);
+        
+        if(headers != null){
+        	getMethod.setHeaders(headers);
+        }
+        
         if (logger.isDebugEnabled()) {
             logger.debug("[HttpClientTemplate#doGet] request to url={}",
                     requestUrl);
@@ -201,7 +208,15 @@ public class HttpServiceImpl implements HttpService{
 	}
 
 	@Override
-	public String doGet(String url) throws IOException {
-		return doGet(url,null);
+	public String doGetRandomUA(String url, String charset) throws IOException {
+		
+		List<Header> list = new ArrayList<>();
+		Header ua = new BasicHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36");
+		list.add(ua);
+		
+		Header[] headers = list.toArray(new BasicHeader[list.size()]); 
+		
+		return doGet(url,charset,headers);
 	}
+
 }

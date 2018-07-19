@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.NameValuePair;
 
 public interface HttpService {
@@ -16,8 +17,8 @@ public interface HttpService {
 
 	String doGet(String url, Map<String, String> parameters, String charset) throws IOException;
 
-	String doGet(String url, String charset) throws IOException;
+	String doGet(String url, String charset, Header[] headers) throws IOException;
 	
-	String doGet(String url) throws IOException;
+	String doGetRandomUA(String url, String charset) throws IOException;
 
 }
