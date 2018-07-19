@@ -1,11 +1,10 @@
 package win.yellowpal.jspider.service.impl;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,15 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
-
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import win.yellowpal.jspider.entity.douban.Book;
 import win.yellowpal.jspider.service.DoubanBookService;
 import win.yellowpal.jspider.service.HttpService;
+import win.yellowpal.jspider.service.RedisService;
+import win.yellowpal.jspider.util.NumberUtils;
 
 @Service
 public class DoubanBookServiceImpl implements DoubanBookService{
@@ -37,9 +41,10 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 	HttpService httpService;
 	
 	@Autowired
-	JedisPool jedisPool;
+	RedisService redisService;
 	
-//	Jedis jedis;
+	@Autowired
+	MongoTemplate mongoTemplate;
 	
 	final String redisKey = "doubanBook";
 	
@@ -55,25 +60,17 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 	 */
 	final String redisRequestsKey = redisKey + separator + "requests";
 	
-	final String bookLinkRegex = "^http(s)?://book.douban.com/subject/(\\d+)/(\\?(.*))?";
+	final String bookLinkRegex = "^http(s)?://book.douban.com/subject/(\\d+)/(\\?(.*)|$)";
 	
 	final Pattern bookLinkPattern = Pattern.compile(bookLinkRegex);
 	
-//	@PostConstruct
-//	public void init(){
-//		jedis = jedisPool.getResource();
-//	}
-//	
-//	@PreDestroy
-//	public void destroy(){
-//		jedis.close();
-//	}
-	
-
 	@Override
 	public void parseUrl(String url) {
+		
+		logger.info("parseUrl:{}",url);
+		
 		if(!StringUtils.isEmpty(url)){
-			Jedis jedis = jedisPool.getResource();
+			Jedis jedis = redisService.getJedis();
 			try {
 				String response = httpService.doGetRandomUA(url,null);
 				if(!StringUtils.isEmpty(response)){
@@ -82,7 +79,6 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 					Elements as = document.getElementsByTag("a");
 					for(Element a : as){
 						String href = a.absUrl("href");
-						
 						Matcher matcher = bookLinkPattern.matcher(href);
 						if(matcher.find()){
 							String link = matcher.group();
@@ -93,6 +89,23 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 							}
 						}
 					}
+				}else{
+					jedis.lpush(redisRequestsKey, url);
+				}
+				long id = NumberUtils.longValue(url);
+				Book book = getFromApi(id);
+				if(book != null){
+					Query query = new Query();
+					
+					query.addCriteria(Criteria.where("id").is(id+""));
+					org.bson.Document document = org.bson.Document.parse(book.toString());
+					Update update = Update.fromDocument(document);
+					mongoTemplate.upsert(query, update, Book.class);
+					
+//					logger.info("upsert,getModifiedCount:{},getMatchedCount:{},getUpsertedId:{}",result.getModifiedCount(),result.getMatchedCount(),result.getUpsertedId());
+					
+				}else{
+					jedis.lpush(redisRequestsKey, url);
 				}
 				
 			} catch (IOException e) {
@@ -102,12 +115,10 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				jedis.close();
 			}
 		}
-		
-		
 	}
 	
 	@Override
-	public JSONObject getFromApi(long id) {
+	public Book getFromApi(long id) {
 		if(id <= 0){
 			return null;
 		}
@@ -117,11 +128,64 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 			String response = httpService.doGetRandomUA(url, null);
 			if(!StringUtils.isEmpty(response)){
 				JSONObject json = JSONObject.parseObject(response);
-				return json;
+				Book book = new Book();
+				book.putAll(json);
+				return book;
+			}else{
+				logger.warn("getFromApi request return null! url:{}",url);
 			}
 		} catch (IOException e) {
 			logger.error("getFromApi,exception:{},id:{}",e.getMessage(),id);
 		}
+		return null;
+	}
+
+	@Override
+	public void crawl() {
+		ExecutorService executorService = Executors.newCachedThreadPool();
+		
+		try {
+			for(int i=0;i<4;i++){
+				
+				executorService.execute(new Runnable() {
+					
+					@Override
+					public void run() {
+						Jedis jedis = redisService.getJedis();
+						
+						try {
+							while(jedis.llen(redisRequestsKey) > 0){
+								String url = jedis.lpop(redisRequestsKey);
+								if(!StringUtils.isEmpty(url)){
+									parseUrl(url);
+								}
+								Thread.sleep(10000);//常规停10s
+								if(jedis.llen(redisRequestsKey) <= 0){//等待10s
+									Thread.sleep(10000);
+								}
+							}
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}finally {
+							jedis.close();
+						}
+						
+					}
+				});
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public Book parseFromHtml(String html, String url) {
+		if(StringUtils.isEmpty(html)){
+			return null;
+		}
+		
+		Document document = Jsoup.parse(html);
+		
 		return null;
 	}
 

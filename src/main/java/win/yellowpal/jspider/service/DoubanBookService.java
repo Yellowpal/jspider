@@ -1,6 +1,6 @@
 package win.yellowpal.jspider.service;
 
-import com.alibaba.fastjson.JSONObject;
+import win.yellowpal.jspider.entity.douban.Book;
 
 /**
  * 豆瓣读书
@@ -22,5 +22,14 @@ public interface DoubanBookService {
 	 * @return <br>
 	 * @author huangguangbin, 2018年7月19日.<br>
 	 */
-	JSONObject getFromApi(long id);
+	Book getFromApi(long id);
+	
+	/**
+	 * 入口
+	 *  <br>
+	 * @author huangguangbin, 2018年7月19日.<br>
+	 */
+	void crawl();
+	
+	Book parseFromHtml(String html,String url);
 }

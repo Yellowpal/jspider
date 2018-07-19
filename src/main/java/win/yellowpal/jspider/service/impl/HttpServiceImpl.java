@@ -34,6 +34,7 @@ import org.springframework.util.StringUtils;
 import com.alibaba.fastjson.JSON;
 
 import win.yellowpal.jspider.service.HttpService;
+import win.yellowpal.jspider.util.UserAgentUtils;
 
 @Service
 public class HttpServiceImpl implements HttpService{
@@ -211,7 +212,7 @@ public class HttpServiceImpl implements HttpService{
 	public String doGetRandomUA(String url, String charset) throws IOException {
 		
 		List<Header> list = new ArrayList<>();
-		Header ua = new BasicHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36");
+		Header ua = new BasicHeader("User-Agent", UserAgentUtils.randomUA());
 		list.add(ua);
 		
 		Header[] headers = list.toArray(new BasicHeader[list.size()]); 

@@ -30,6 +30,8 @@
 		<property name="maxTotal" value="${redis.pool.maxTotal}"></property>
 		<property name="maxIdle" value="${redis.pool.maxIdle}"></property>
 		<property name="minIdle" value="${redis.pool.minIdle}"></property>
+		<property name="testOnBorrow" value="true"/>
+        <property name="testOnReturn" value="true"/>
 	</bean>
 	
 	<bean id="jedisPool" class="redis.clients.jedis.JedisPool" >

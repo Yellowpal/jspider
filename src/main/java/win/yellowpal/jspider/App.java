@@ -1,21 +1,13 @@
 package win.yellowpal.jspider;
 
-import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.bson.BSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-
-import com.alibaba.fastjson.JSONObject;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
 
 import win.yellowpal.jspider.service.DoubanBookService;
-import win.yellowpal.jspider.service.HttpService;
 
 /**
  * Hello world!
@@ -32,28 +24,22 @@ public class App {
 		@SuppressWarnings("resource")
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(path);
 		
-//		HttpService httpService = context.getBean(HttpService.class);
 		DoubanBookService doubanBookService = context.getBean(DoubanBookService.class);
-		MongoTemplate mongoTemplate = context.getBean(MongoTemplate.class);
-//		String url = "https://book.douban.com/subject/1023045/?icn=index-book250-subject";
 		
+		doubanBookService.crawl();
+//		String url = "https://book.douban.com/1023045/reading/";
 //		doubanBookService.parseUrl(url);
 		
-//		JSONObject json = new JSONObject();
-//		json.put("code", 1);
-//		json.put("id", 1);
-//		json.put("data", "阿道夫adf!");
 		
-//		mongoTemplate.insert(json, "test");
-		
-//		Criteria criteria = new Criteria();
-//		criteria.andOperator(Criteria.where("code").is(1));
-//		Query query = new Query(criteria);
+//		final String bookLinkRegex = "^http(s)?://book.douban.com/subject/(\\d+)/(\\?(.*)|$)";
 //		
-//		System.out.println(mongoTemplate.findOne(query, JSONObject.class,"test").get("_id"));
-//		System.out.println(mongoTemplate.getCollectionNames());
-//		System.out.println(mongoTemplate.find(query, JSONObject.class, "test"));
-		
-		System.out.println(doubanBookService.getFromApi(1023045L));
+//		final Pattern bookLinkPattern = Pattern.compile(bookLinkRegex);
+//		String href = "https://book.douban.com/1023045/reading/";
+//		Matcher matcher = bookLinkPattern.matcher(href);
+//		if(matcher.find()){
+//			String link = matcher.group();
+//			System.out.println(link);
+//		}
+//		
 	}
 }

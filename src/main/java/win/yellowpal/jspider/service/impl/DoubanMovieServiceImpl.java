@@ -11,7 +11,6 @@ import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 
-import redis.clients.jedis.JedisPool;
 import win.yellowpal.jspider.service.DoubanMovieService;
 import win.yellowpal.jspider.service.HttpService;
 
@@ -31,9 +30,6 @@ public class DoubanMovieServiceImpl implements DoubanMovieService{
 
 	@Autowired
 	HttpService httpService;
-	
-	@Autowired
-	JedisPool jedisPool;
 	
 	@Override
 	public void parseUrl(String url) {
