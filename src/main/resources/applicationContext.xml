@@ -51,6 +51,7 @@
     如果需要验证,mongo-client需要加这句: credentials="${mongo.user}:${mongo.pwd}@${mongo.defaultDbName}"
     -->
     <mongo:mongo-client id="mongoClient"  host="${mongo.host}" port="${mongo.port}">
+    
         <mongo:client-options
                 connections-per-host="${mongo.connectionsPerHost}"
                 min-connections-per-host="${mongo.minConnectionsPerHost}"
@@ -64,6 +65,7 @@
                 max-connection-life-time="${mongo.maxConnectionLifeTime}"
 
         />
+        
     </mongo:mongo-client>
 
     <!-- dbname="${mongo.defaultDbName}" host="${mongo.host}"

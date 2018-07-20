@@ -1,6 +1,8 @@
 package win.yellowpal.jspider.service.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -9,6 +11,8 @@ import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +25,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import redis.clients.jedis.Jedis;
 import win.yellowpal.jspider.entity.douban.Book;
@@ -185,8 +190,80 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 		}
 		
 		Document document = Jsoup.parse(html);
+		Book book = new Book();
+		//title
+		Element element = document.selectFirst("#wrapper h1 span[property='v:itemreviewed']");
+		if(element != null){
+			book.put("title", element.ownText().trim());
+		}
+		//numRaters
+		element = document.selectFirst("span[property='v:votes']");
+		if(element != null){
+			book.put("numRaters", element.ownText().trim());
+		}
+		//average
+		element = document.selectFirst(".rating_num[property='v:average']");
+		if(element != null){
+			book.put("average", element.ownText().trim());
+		}
+		//images
+		element = document.selectFirst("#content a.nbg");
+		if(element != null){
+			String link = element.attr("href");
+			JSONObject json = new JSONObject();
+			json.put("large", link);
+			
+			book.put("images", json);
+			
+			//image
+			book.put("image", link);
+		}
 		
-		return null;
+		//info
+		element = document.selectFirst("#content #info");
+		Elements authorElements = null;
+		if(element != null){
+			List<TextNode> list = element.textNodes();
+			List<Element> nodes = element.select("span.pl");
+			List<String> values = new ArrayList<>();
+			List<String> keys = new ArrayList<>();
+			for(Element node : nodes){
+				String key = node.ownText().trim().replaceAll(":", "");
+				if(authorElements == null){
+					authorElements = new Elements();
+					Element a = node.nextElementSibling();
+					while(a.tagName() == "a"){
+						authorElements.add(a);
+						a = a.nextElementSibling();
+					}
+				}
+				
+				keys.add(key);
+			}
+			if(authorElements != null && authorElements.size() > 0){
+				String[] authors = new String[authorElements.size()];
+				int i = 0;
+				for(Element author : authorElements){
+					authors[i] = author.ownText();
+					i++;
+				}
+				
+				values.add(JSON.toJSONString(authors));
+			}
+			
+			for(TextNode textNode : list){
+				String text = textNode.text().trim().replaceAll("\\s", "");
+				if(StringUtils.isEmpty(text)){
+					continue;
+				}
+				values.add(text);
+			}
+			
+			System.out.println("keys:"+keys);
+			System.out.println("values:"+values);
+		}
+		
+		return book;
 	}
 
 }
