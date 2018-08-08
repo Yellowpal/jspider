@@ -35,10 +35,9 @@ public class App {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(path);
 		
 		DoubanBookService doubanBookService = context.getBean(DoubanBookService.class);
-		MongoTemplate mongoTemplate = context.getBean(MongoTemplate.class);
+//		MongoTemplate mongoTemplate = context.getBean(MongoTemplate.class);
 		HttpService httpService = context.getBean(HttpServiceImpl.class);
 		
-		ExecutorService executorService = Executors.newCachedThreadPool();
 		String url = "https://book.douban.com/subject/1023045/?icn=index-book250-subject";
 		
 		try {

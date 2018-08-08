@@ -2,7 +2,9 @@ package win.yellowpal.jspider.service.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -188,9 +190,10 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 		if(StringUtils.isEmpty(html)){
 			return null;
 		}
-		
+		long id = NumberUtils.longValue(url);
 		Document document = Jsoup.parse(html);
 		Book book = new Book();
+		book.put("id", id);
 		//title
 		Element element = document.selectFirst("#wrapper h1 span[property='v:itemreviewed']");
 		if(element != null){
@@ -259,8 +262,21 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				values.add(text);
 			}
 			
-			System.out.println("keys:"+keys);
-			System.out.println("values:"+values);
+			JSONObject info = new JSONObject();
+			if(keys.size() == values.size()){
+				for(int i=0;i<keys.size();i++){
+					info.put(keys.get(i), values.get(i));
+				}
+			}
+			
+			book.put("info", info);
+		}
+		
+		//summary & author_intro
+		Elements elements = document.select(".related_info .indent .intro");
+		if(elements != null && elements.size() == 2){
+			book.put("summary", elements.get(0).text());
+			book.put("author_intro", elements.get(1).text());
 		}
 		
 		return book;
