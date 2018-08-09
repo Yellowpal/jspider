@@ -20,7 +20,6 @@ public interface DoubanMovieService {
 	 * 从豆瓣接口读取数据
 	 * @param id
 	 * @return <br>
-	 * @author huangguangbin, 2018年7月19日.<br>
 	 */
 	JSONObject getFromApi(long id);
 }

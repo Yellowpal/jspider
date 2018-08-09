@@ -186,7 +186,7 @@ public class HttpServiceImpl implements HttpService{
 		charset = getCharset(charset);
         String requestUrl = url;
         HttpGet getMethod = new HttpGet(url);
-        RequestConfig requestConfig = RequestConfig.custom()
+        RequestConfig requestConfig = RequestConfig.custom().setMaxRedirects(0)
                 .setConnectTimeout(timeout).setConnectionRequestTimeout(timeout)
                 .setSocketTimeout(timeout).setRedirectsEnabled(false).build();
         getMethod.setConfig(requestConfig);

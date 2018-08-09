@@ -27,7 +27,6 @@ public class App {
 	static Logger logger = LoggerFactory.getLogger(App.class);
 	/**
 	 * @param args <br>
-	 * @author huangguangbin, 2018年7月18日.<br>
 	 */
 	public static void main(String[] args) {
 		String path = "applicationContext.xml";
@@ -36,21 +35,21 @@ public class App {
 		
 		DoubanBookService doubanBookService = context.getBean(DoubanBookService.class);
 //		MongoTemplate mongoTemplate = context.getBean(MongoTemplate.class);
-		HttpService httpService = context.getBean(HttpServiceImpl.class);
+//		HttpService httpService = context.getBean(HttpServiceImpl.class);
 		
-		String url = "https://book.douban.com/subject/1023045/?icn=index-book250-subject";
+//		String url = "https://book.douban.com/subject/30280610/?icn=index-latestbook-subject";
 		
-		try {
-			String text = httpService.doGetRandomUA(url, null);
-			Book book = doubanBookService.parseFromHtml(text, url);
-			System.out.println(book);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-//		doubanBookService.crawl();
+//		try {
+//			String text = httpService.doGetRandomUA(url, null);
+//			Book book = doubanBookService.parseFromHtml(text, url);
+//			System.out.println(book);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		doubanBookService.crawl(1);
 //		doubanBookService.parseUrl(url);
 		
+//		System.out.println(doubanBookService.isBookDetailUrl(url));
 		
 //		final String bookLinkRegex = "^http(s)?://book.douban.com/subject/(\\d+)/(\\?(.*)|$)";
 //		

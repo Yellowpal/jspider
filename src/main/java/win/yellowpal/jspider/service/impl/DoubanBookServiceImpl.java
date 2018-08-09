@@ -2,9 +2,7 @@ package win.yellowpal.jspider.service.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -13,7 +11,6 @@ import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
@@ -99,8 +96,14 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				}else{
 					jedis.lpush(redisRequestsKey, url);
 				}
+				
+				//不是目标链接
+				if(!isBookDetailUrl(url)){
+					return;
+				}
 				long id = NumberUtils.longValue(url);
-				Book book = getFromApi(id);
+//				Book book = getFromApi(id);
+				Book book = parseFromHtml(response, url);
 				if(book != null){
 					Query query = new Query();
 					
@@ -108,8 +111,6 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 					org.bson.Document document = org.bson.Document.parse(book.toString());
 					Update update = Update.fromDocument(document);
 					mongoTemplate.upsert(query, update, Book.class);
-					
-//					logger.info("upsert,getModifiedCount:{},getMatchedCount:{},getUpsertedId:{}",result.getModifiedCount(),result.getMatchedCount(),result.getUpsertedId());
 					
 				}else{
 					jedis.lpush(redisRequestsKey, url);
@@ -122,6 +123,16 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				jedis.close();
 			}
 		}
+	}
+	
+	@Override
+	public boolean isBookDetailUrl(String url){
+		if(StringUtils.isEmpty(url)){
+			return false;
+		}
+		Matcher matcher = bookLinkPattern.matcher(url);
+		
+		return matcher.find();
 	}
 	
 	@Override
@@ -148,11 +159,11 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 	}
 
 	@Override
-	public void crawl() {
+	public void crawl(int threadSize) {
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		
 		try {
-			for(int i=0;i<4;i++){
+			for(int i=0;i<threadSize;i++){
 				
 				executorService.execute(new Runnable() {
 					
@@ -166,7 +177,7 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 								if(!StringUtils.isEmpty(url)){
 									parseUrl(url);
 								}
-								Thread.sleep(10000);//常规停10s
+								Thread.sleep(5000);//常规停5s
 								if(jedis.llen(redisRequestsKey) <= 0){//等待10s
 									Thread.sleep(10000);
 								}
@@ -235,7 +246,7 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				if(authorElements == null){
 					authorElements = new Elements();
 					Element a = node.nextElementSibling();
-					while(a.tagName() == "a"){
+					while(a != null && "a".equals(a.tagName())){
 						authorElements.add(a);
 						a = a.nextElementSibling();
 					}
