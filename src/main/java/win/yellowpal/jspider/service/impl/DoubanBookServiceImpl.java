@@ -117,6 +117,7 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				}
 				
 			} catch (IOException e) {
+				jedis.lpush(redisRequestsKey, url);
 				e.printStackTrace();
 				logger.error("parseUrl,exception:{},url:{}",e.getMessage(),url);
 			} finally {
