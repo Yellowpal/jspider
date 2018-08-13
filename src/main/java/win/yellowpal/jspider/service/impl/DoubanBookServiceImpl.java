@@ -120,6 +120,11 @@ public class DoubanBookServiceImpl implements DoubanBookService{
 				jedis.lpush(redisRequestsKey, url);
 				e.printStackTrace();
 				logger.error("parseUrl,exception:{},url:{}",e.getMessage(),url);
+				try {
+					Thread.sleep(2*60*60*1000);//302停止
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
 			} finally {
 				jedis.close();
 			}

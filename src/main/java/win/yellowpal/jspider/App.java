@@ -46,7 +46,7 @@ public class App {
 //		} catch (IOException e) {
 //			e.printStackTrace();
 //		}
-		doubanBookService.crawl(1);
+		doubanBookService.crawl(4);
 //		doubanBookService.parseUrl(url);
 		
 //		System.out.println(doubanBookService.isBookDetailUrl(url));
